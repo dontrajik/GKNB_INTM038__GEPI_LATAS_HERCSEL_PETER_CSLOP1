@@ -1,29 +1,40 @@
 import cv2
 import numpy as np
 
-# Load image, grayscale, Gaussian blur, Otsu's threshold
-image = cv2.imread('src\\barcode002.png')
-image[np.where(image<50)] = 0
-image[np.where(image>250)] = 255
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+for i in range(19):
+    imgNumber = i
+    image = cv2.imread(f"src/barcode{imgNumber:03d}.png")
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-# Detect vertical lines
-vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1,20))
-vertical_mask = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, vertical_kernel, iterations=2)
+    edges = cv2.Canny(gray, 400, 500)
+    lines = cv2.HoughLinesP(edges, 1, np.pi/180, 40,
+                            minLineLength=15, maxLineGap=3)
 
+    asd = np.zeros((image.shape[0], image.shape[1], 3), np.uint8)
 
-kernel = np.ones((3,5), np.uint8)
-vertical_mask = cv2.dilate(vertical_mask,kernel,iterations = 7)
+    for line in lines:
+        x1, y1, x2, y2 = line[0]
+        cv2.line(asd, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-contours, hierarchy = cv2.findContours(image=vertical_mask, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_NONE)
-c = max(contours, key = cv2.contourArea)
-x,y,w,h = cv2.boundingRect(c)
+    asd = cv2.medianBlur(asd, 7)
+    kernel = np.ones((5, 5), np.uint8)
+    asd = cv2.dilate(asd, kernel, iterations=10)
+    asd = cv2.erode(asd, kernel, iterations=15)
 
-print(x,y,w,h)
+    edges = cv2.Canny(asd, 30, 200)
 
-cv2.rectangle(image, (x, y), (x + w, y + h), (0,255,0), 4)
+    contours, hierarchy = cv2.findContours(
+        edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-cv2.imshow('vertical_mask', image)
-cv2.waitKey()
-cv2.destroyAllWindows()
+    contour = max(contours, key=cv2.contourArea)
+
+    rect = cv2.boundingRect(contour)
+    x, y, w, h = rect
+    cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 5)
+
+    # cv2.imshow('edges', edges)
+    # cv2.imshow("asd", asd)
+    cv2.imshow("result", image)
+    cv2.waitKey()
+
+    cv2.destroyAllWindows()
