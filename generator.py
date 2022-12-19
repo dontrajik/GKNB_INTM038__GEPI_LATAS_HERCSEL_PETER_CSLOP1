@@ -1,5 +1,4 @@
 def generateRandomPicture(noise):
-    # import EAN13 from barcode module
     from PIL import Image, ImageDraw
     from barcode import EAN13
     from random import randint
@@ -7,14 +6,9 @@ def generateRandomPicture(noise):
     from svglib.svglib import svg2rlg
     from reportlab.graphics import renderPM
 
-    # Make sure to pass the number as string
     number = '5901234123457'
-
-    # Now, let's create an object of EAN13
-    # class and pass the number
     my_code = EAN13(number)
 
-    # Our barcode is ready. Let's save it.
     my_code.save("new_code")
 
     renderPM.drawToFile(svg2rlg("new_code.svg"), "barcode.png", fmt='PNG')
@@ -29,8 +23,7 @@ def generateRandomPicture(noise):
         x2 = randint(0, 512)
         y1 = randint(0, 512)
         y2 = randint(0, 512)
-        draw.line((x1, x2, y1, y2), width=randint(
-            1, 30), fill=(randint(0, 255), randint(0, 255), randint(0, 255)))
+        draw.line((x1, x2, y1, y2), width=randint(1, 30), fill=(randint(0, 255), randint(0, 255), randint(0, 255)))
 
     img2 = Image.open("barcode.png").convert("RGB")
     img2 = img2.rotate(randint(0, 360), expand=1, fillcolor=(r, g, b))
